@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/styles.css" />
+    <title>File Transfer USB -> COM -> ...</title>
+</head>
+
+<body>
+    <h1>File Transfer USB -> COM -> ...</h1>
+    <h2>Try The Methods Below...</h2>
+    <div class="form-container">
+        <h3>1. Save File to Pendrive</h3>
+        <button id="saveBtn">Save to Pendrive</button>
+    </div>
+
+    <div class="form-container">
+        <h3> 2. COM file transfer</h3>
+        <form id="comfiletransfer" action="/sendViaCOM" method="POST" onsubmit="return capitalizeComPort();">
+            <input type="text" placeholder="COM ex.: COM3" name="com-port" id="com-port" required>
+            <label for="baudrate">Select Baud Rate:</label>
+            <select id="baudrate" name="baudrate">
+                <option value="9600">9600</option>
+                <option value="19200">19200</option>
+                <option value="38400">38400</option>
+                <option value="57600">57600</option>
+                <option value="115200">115200</option>
+                <option value="128000">128000</option>
+                <option value="256000">256000</option>
+                <!-- Add more options as needed -->
+            </select>
+            <input type="submit" value="Send File Via COM Port">
+        </form>
+    </div>
+
+    <div id="response"></div>
+
+    <div class="form-container">
+        <h3>3. Save Data to posts.json file in project directory [data\posts.json]</h3>
+        <form action="/submit" method="POST">
+            <input type="text" placeholder="Data for json file" name="data" required>
+            <input type="submit" value="Save to File">
+        </form>
+    </div>
+
+    <br />
+    <br />
+
+    <h4>Your JSON file looks as follows... 👇</h4>
+    <ul>
+        <% if (locals.jsonData) { %>
+            <% Object.entries(jsonData).forEach(([key, value])=> { %>
+                <li>
+                    <%= key %>: <%= value %>
+                </li>
+                <% }); %>
+                    <% } %>
+    </ul>
+
+
+    <script>
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            console.log("tutaj");
+            fetch('/save')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(data); // Log success message
+                    alert('File saved to pendrive successfully.');
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    alert('An error occurred while saving the file to pendrive.');
+                });
+        });
+
+        function capitalizeComPort() {
+            console.log("tutaj jestem");
+
+            var comPortInput = document.getElementById("com-port");
+            comPortInput.value = comPortInput.value.toUpperCase();
+            console.log(comPortInput.value);
+        }
+
+
+        // Function to display success or error message in a pop-up window
+        function showMessage(message) {
+            alert(message);
+        }
+
+        // Function to handle form submission
+        function handleSubmit() {
+            // Your form submission logic here
+        }
+    </script>
+</body>
+
+</html>
