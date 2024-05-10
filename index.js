@@ -3,6 +3,8 @@ import bodyParser from "body-parser";
 import fs from "fs";
 import path from "path";
 import { SerialPort } from "serialport";
+import fetch from "node-fetch";
+import { error } from "console";
 
 const app = express();
 const port_host = 3000;
@@ -50,12 +52,9 @@ app.post("/sendViaCOM", (req, res) => {
     console.log(com, baudrateNumber);
 
     port.on("error", (err) => {
-      console.error("1. Error opening serial port:", err.message);
+      console.error("Error opening serial port:", err.message);
       res.setHeader("Content-Type", "application/json");
-      res.send(
-        "<script>alert('here \"" +
-          "\" I will handle the error'); window.location.href = '/';</script>"
-      );
+      res.json({ error: err.message });
     });
 
     port.on("open", () => {
@@ -65,10 +64,8 @@ app.post("/sendViaCOM", (req, res) => {
       fs.readFile(filePath, (err, data) => {
         if (err) {
           // Handle file reading error
-          console.error("3. Error reading file:", err);
-          res
-            .status(500)
-            .json({ error: "4. Error opening serial port: " + err.message });
+          console.error("Error reading file:", err.message);
+          res.status(500).json({ error: "Error reading file: " + err.message });
           return;
         }
 
@@ -76,10 +73,10 @@ app.post("/sendViaCOM", (req, res) => {
         port.write(data, (err) => {
           if (err) {
             // Handle port write error
-            console.error("5. Error writing to port:", err.message);
-            res
-              .status(500)
-              .json({ error: "6. Error opening serial port: " + err.message });
+            console.error("Error writing to port:", err.message);
+            res.status(500).json({
+              error: "Error sending the file via serial port: " + err.message,
+            });
             return;
           }
           console.log("File sent successfully.");
@@ -88,10 +85,8 @@ app.post("/sendViaCOM", (req, res) => {
       });
     });
   } catch (error) {
-    console.error("7. Error:", error.message);
-    res
-      .status(500)
-      .json({ error: "8. Error opening serial port: " + error.message });
+    console.error("Error:", error.message);
+    res.status(500).json({ error: "Error: " + error.message });
   }
 });
 

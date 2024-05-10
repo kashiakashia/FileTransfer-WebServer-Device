@@ -61,6 +61,34 @@
 
 
     <script>
+        document.getElementById('comfiletransfer').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            console.log(formData);
+
+            // Use fetch to send the form data as JSON
+            fetch('/sendViaCOM', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData.entries())),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update the HTML to display the response
+                    const responseDiv = document.getElementById('response');
+                    console.log("js html", responseDiv);
+                    responseDiv.innerHTML = JSON.stringify(data, null, 2); // Beautify JSON
+                })
+                .catch(error => {
+                    console.error('Error:', error)
+                    const responseDiv = document.getElementById('response');
+                    console.log("js html", responseDiv);
+                    responseDiv.innerHTML = JSON.stringify(error, null, 2); // Beautify JSON
+                });
+        });
 
         document.getElementById('saveBtn').addEventListener('click', () => {
             console.log("tutaj");
