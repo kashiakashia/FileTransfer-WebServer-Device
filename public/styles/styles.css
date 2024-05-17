@@ -1,3 +1,8 @@
+body {
+  font-family: "Roboto", sans-serif;
+  padding: 20px;
+  background-color: rgb(252, 252, 252);
+}
 h1 {
   text-align: center;
 }
@@ -8,4 +13,35 @@ h3 {
 
 ul {
   list-style: none;
+}
+
+input {
+  border-width: 1px;
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px;
+}
+
+button {
+  border-width: 1px;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+select {
+  border-width: 1px;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.button {
+  color: #2e2d2d;
+  padding: 8px;
+  transition-duration: 0.2s;
+  cursor: pointer;  
+}
+
+.button:hover {
+  color: #2e2d2d;
+  padding: 8px;
 }

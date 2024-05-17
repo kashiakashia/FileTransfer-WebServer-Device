@@ -9,11 +9,10 @@
 </head>
 
 <body>
-    <h1>File Transfer USB -> COM -> ...</h1>
-    <h2>Try The Methods Below...</h2>
+    <h1>File Transfer via USB and COM 🚀</h1>
     <div class="form-container">
         <h3>1. Save File to Pendrive</h3>
-        <button id="saveBtn">Save to Pendrive</button>
+        <button id="saveBtn" class="button">Save to Pendrive</button>
     </div>
 
     <div class="form-container">
@@ -31,7 +30,7 @@
                 <option value="256000">256000</option>
                 <!-- Add more options as needed -->
             </select>
-            <input type="submit" value="Send File Via COM Port">
+            <input type="submit" value="Send File Via COM Port" class="button">
         </form>
     </div>
 
@@ -41,13 +40,13 @@
         <h3>3. Save Data to posts.json file in project directory [data\posts.json]</h3>
         <form action="/submit" method="POST">
             <input type="text" placeholder="Data for json file" name="data" required>
-            <input type="submit" value="Save to File">
+            <input type="submit" value="Save to File" class="button">
         </form>
     </div>
 
     <br />
     <br />
-
+    <hr>
     <h4>Your JSON file looks as follows... 👇</h4>
     <ul>
         <% if (locals.jsonData) { %>
