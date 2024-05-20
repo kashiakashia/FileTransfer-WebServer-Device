@@ -2,20 +2,64 @@ document.addEventListener("DOMContentLoaded", (event) => {
   const circle = document.querySelector(".circle");
   const point = document.getElementById("draggable-point");
   const percentageDisplay = document.getElementById("percentage");
-  const radius = circle.clientWidth / 2;
-  const pointRadius = point.clientWidth / 2; // Radius of the point itself
-  const circleCenter = {
+  let radius = circle.clientWidth / 2;
+  let pointRadius = point.clientWidth / 2;
+  let circleCenter = {
     x: circle.getBoundingClientRect().left + radius,
     y: circle.getBoundingClientRect().top + radius,
   };
 
   let isDragging = false;
+  let lastMouseMoveTime = 0;
+  const throttleInterval = 16; // Approx 60fps
+
+  function updateDimensions() {
+    radius = circle.clientWidth / 2;
+    pointRadius = point.clientWidth / 2;
+    circleCenter = {
+      x: circle.getBoundingClientRect().left + radius,
+      y: circle.getBoundingClientRect().top + radius,
+    };
+  }
 
   point.addEventListener("mousedown", (e) => {
     isDragging = true;
+    updateDimensions();
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   });
+
+  function onMouseMove(e) {
+    const currentTime = Date.now();
+    if (!isDragging || currentTime - lastMouseMoveTime < throttleInterval)
+      return;
+    lastMouseMoveTime = currentTime;
+
+    const x = e.clientX - circleCenter.x;
+    const y = e.clientY - circleCenter.y;
+    const angle = Math.atan2(y, x);
+    const adjustedAngle = angle < -Math.PI / 2 ? angle + 2 * Math.PI : angle;
+
+    const newX =
+      circleCenter.x + Math.cos(adjustedAngle) * (radius - pointRadius); // Adjust to keep center of point on the border
+    const newY =
+      circleCenter.y + Math.sin(adjustedAngle) * (radius - pointRadius); // Adjust to keep center of point on the border
+
+    point.style.left = `${newX - circleCenter.x + radius}px`;
+    point.style.top = `${newY - circleCenter.y + radius}px`;
+
+    const percentage = (
+      ((adjustedAngle + Math.PI / 2) / (2 * Math.PI)) *
+      100
+    ).toFixed(2);
+    percentageDisplay.textContent = `${percentage}%`;
+  }
+
+  function onMouseUp() {
+    isDragging = false;
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+  }
 
   document
     .getElementById("comfiletransfer")
@@ -95,31 +139,5 @@ document.addEventListener("DOMContentLoaded", (event) => {
   function capitalizeComPort() {
     var comPortInput = document.getElementById("com-port");
     comPortInput.value = comPortInput.value.toUpperCase();
-  }
-
-  function onMouseMove(e) {
-    if (!isDragging) return;
-
-    const x = e.clientX - circleCenter.x;
-    const y = e.clientY - circleCenter.y;
-    const angle = Math.atan2(y, x);
-    const adjustedAngle = angle >= 0 ? angle : 2 * Math.PI + angle;
-
-    const newX =
-      circleCenter.x + Math.cos(adjustedAngle) * (radius - pointRadius); // Adjust to keep center of point on the border
-    const newY =
-      circleCenter.y + Math.sin(adjustedAngle) * (radius - pointRadius); // Adjust to keep center of point on the border
-
-    point.style.left = `${newX - pointRadius}px`;
-    point.style.top = `${newY - pointRadius}px`;
-
-    const percentage = ((adjustedAngle / (2 * Math.PI)) * 100).toFixed(2);
-    percentageDisplay.textContent = `${percentage}%`;
-  }
-
-  function onMouseUp() {
-    isDragging = false;
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
   }
 });
