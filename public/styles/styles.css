@@ -107,3 +107,7 @@ select {
   position: absolute;
   font-size: 24px;
 }
+
+#saveControlPanelBtn {
+  margin-left: 40px;
+}

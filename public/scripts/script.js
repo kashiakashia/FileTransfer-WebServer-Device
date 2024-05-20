@@ -136,6 +136,59 @@ document.addEventListener("DOMContentLoaded", (event) => {
     });
   });
 
+  document
+    .getElementById("saveControlPanelBtn")
+    .addEventListener("click", () => {
+      const powerCells = document.querySelectorAll("#row1 .cell");
+      const heatCells = document.querySelectorAll("#row2 .cell");
+      const percentage = document.getElementById("percentage").textContent;
+
+      const powerData = Array.from(powerCells)
+        .filter(
+          (cell) =>
+            cell.style.backgroundColor !== "rgb(221, 221, 221)" &&
+            cell.style.backgroundColor !== ""
+        )
+        .map((cell) => cell.getAttribute("data-index"));
+
+      const heatData = Array.from(heatCells)
+        .filter(
+          (cell) =>
+            cell.style.backgroundColor !== "rgb(221, 221, 221)" &&
+            cell.style.backgroundColor !== ""
+        )
+        .map((cell) => cell.getAttribute("data-index"));
+
+      const dataToSave = {
+        circle: percentage,
+        power: powerData,
+        heat: heatData,
+      };
+
+      fetch("/saveControlPanelData", {
+        method: "POST",
+        body: JSON.stringify(dataToSave),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Control panel data saved:", data);
+          alert("Control panel data saved successfully.");
+          window.location.reload(); // Reload the page to refresh JSON data display
+        })
+        .catch((error) => {
+          console.error("Error saving control panel data:", error);
+          alert("An error occurred while saving control panel data.");
+        });
+    });
+
   function capitalizeComPort() {
     var comPortInput = document.getElementById("com-port");
     comPortInput.value = comPortInput.value.toUpperCase();

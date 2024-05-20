@@ -11,17 +11,14 @@ const app = express();
 const port_host = 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const filePath = "./data/posts.json"; // Path to the file to be sent
 
-//allow static files
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"))); //allow static files
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Path to the file to be sent
-const filePath = "./data/posts.json";
-// Parse JSON bodies
-app.use(express.json());
-
-// Parse URL-encoded bodies
-app.use(express.urlencoded({ extended: true }));
+app.set("view engine", "ejs");
 
 let jsonData = {};
 
@@ -36,10 +33,6 @@ fs.readFile(filePath, (err, data) => {
     console.error("Error parsing JSON:", error);
   }
 });
-
-app.use(express.static("public"));
-app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.render("index", { jsonData: jsonData });
@@ -122,6 +115,24 @@ app.post("/submit", (req, res) => {
     }
     console.log("Post data saved successfully.");
     res.redirect("/");
+  });
+});
+
+app.post("/saveControlPanelData", (req, res) => {
+  const controlPanelData = req.body;
+
+  const currentDate = new Date().toISOString();
+  jsonData[currentDate] = controlPanelData;
+
+  fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), (err) => {
+    if (err) {
+      console.error("Error writing file:", err);
+      return res
+        .status(500)
+        .json({ error: "Error saving control panel data." });
+    }
+    console.log("Control panel data saved successfully.");
+    res.json({ success: "Control panel data saved successfully." });
   });
 });
 

@@ -44,7 +44,7 @@
         </form>
     </div>
 
-    <h3>4. Controll panel -> data is being saved to json file</h3>
+    <h3>4. Control panel -> data is being saved to json file</h3>
     <div class="grid-container">
         <h5>Power</h5>
         <div class="row" id="row1">
@@ -61,6 +61,7 @@
             <div class="cell" data-color="red" data-index="2"></div>
             <div class="cell" data-color="red" data-index="3"></div>
             <div class="cell" data-color="red" data-index="4"></div>
+            <button id="saveControlPanelBtn" class="button">Save settings to file</button>
         </div>
     </div>
 
@@ -71,7 +72,9 @@
         <div class="circle">
             <div class="point" id="draggable-point"></div>
             <div class="percentage" id="percentage">0%</div>
+
         </div>
+
     </div>
 
     <br />
@@ -82,7 +85,7 @@
         <% if (locals.jsonData) { %>
             <% Object.entries(jsonData).forEach(([key, value])=> { %>
                 <li>
-                    <%= key %>: <%= value %>
+                    <%= key %>: <%= JSON.stringify(value) %>
                 </li>
                 <% }); %>
                     <% } %>
