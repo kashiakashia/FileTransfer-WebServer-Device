@@ -44,6 +44,23 @@
         </form>
     </div>
 
+    <div class="grid-container">
+        <div class="row" id="row1">
+            <div class="cell" data-color="green" data-index="0"></div>
+            <div class="cell" data-color="green" data-index="1"></div>
+            <div class="cell" data-color="green" data-index="2"></div>
+            <div class="cell" data-color="green" data-index="3"></div>
+            <div class="cell" data-color="green" data-index="4"></div>
+        </div>
+        <div class="row" id="row2">
+            <div class="cell" data-color="red" data-index="0"></div>
+            <div class="cell" data-color="red" data-index="1"></div>
+            <div class="cell" data-color="red" data-index="2"></div>
+            <div class="cell" data-color="red" data-index="3"></div>
+            <div class="cell" data-color="red" data-index="4"></div>
+        </div>
+    </div>
+
     <br />
     <br />
     <hr>
@@ -60,52 +77,80 @@
 
 
     <script>
-        document.getElementById('comfiletransfer').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            console.log(formData);
+        document
+            .getElementById("comfiletransfer")
+            .addEventListener("submit", function (event) {
+                event.preventDefault();
+                const form = event.target;
+                const formData = new FormData(form);
+                console.log(formData);
 
-            // Use fetch to send the form data as JSON
-            fetch('/sendViaCOM', {
-                method: 'POST',
-                body: JSON.stringify(Object.fromEntries(formData.entries())),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // Update the HTML to display the response
-                    const responseDiv = document.getElementById('response');
-                    console.log("js html", responseDiv);
-                    responseDiv.innerHTML = JSON.stringify(data, null, 2); // Beautify JSON
+                // Use fetch to send the form data as JSON
+                fetch("/sendViaCOM", {
+                    method: "POST",
+                    body: JSON.stringify(Object.fromEntries(formData.entries())),
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                 })
-                .catch(error => {
-                    console.error('Error:', error)
-                    const responseDiv = document.getElementById('response');
-                    console.log("js html", responseDiv);
-                    responseDiv.innerHTML = JSON.stringify(error, null, 2); // Beautify JSON
-                });
-        });
+                    .then((response) => response.json())
+                    .then((data) => {
+                        // Update the HTML to display the response
+                        const responseDiv = document.getElementById("response");
+                        console.log("js html", responseDiv);
+                        responseDiv.innerHTML = JSON.stringify(data, null, 2); // Beautify JSON
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        const responseDiv = document.getElementById("response");
+                        console.log("js html", responseDiv);
+                        responseDiv.innerHTML = JSON.stringify(error, null, 2); // Beautify JSON
+                    });
+            });
 
-        document.getElementById('saveBtn').addEventListener('click', () => {
+        document.getElementById("saveBtn").addEventListener("click", () => {
             console.log("tutaj");
-            fetch('/save')
-                .then(response => {
+            fetch("/save")
+                .then((response) => {
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error("Network response was not ok");
                     }
                     return response.text();
                 })
-                .then(data => {
+                .then((data) => {
                     console.log(data); // Log success message
-                    alert('File saved to pendrive successfully.');
+                    alert("File saved to pendrive successfully.");
                 })
-                .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
-                    alert('An error occurred while saving the file to pendrive.');
+                .catch((error) => {
+                    console.error("There was a problem with the fetch operation:", error);
+                    alert("An error occurred while saving the file to pendrive.");
                 });
+        });
+
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                const color = cell.getAttribute('data-color');
+                let index = parseInt(cell.getAttribute('data-index'));
+
+                // If the cell is already colored, reset it to gray and reset the index.
+                if (cell.style.backgroundColor !== 'rgb(221, 221, 221)' && cell.style.backgroundColor !== '') {
+                    cell.style.backgroundColor = '#ddd';
+                    cell.setAttribute('data-index', '0');
+                } else {
+                    // If the cell is gray, color it.
+                    let shade;
+                    if (color === 'green') {
+                        shade = `rgb(0, ${255 - (index * 50)}, 0)`;
+                    } else if (color === 'red') {
+                        shade = `rgb(${255 - (index * 50)}, 0, 0)`;
+                    }
+                    cell.style.backgroundColor = shade;
+                    // Increment the index for the next click.
+                    if (index < 4) {
+                        cell.setAttribute('data-index', index + 1);
+                    }
+                }
+            });
         });
 
         function capitalizeComPort() {
@@ -115,7 +160,6 @@
             comPortInput.value = comPortInput.value.toUpperCase();
             console.log(comPortInput.value);
         }
-
 
         // Function to display success or error message in a pop-up window
         function showMessage(message) {
