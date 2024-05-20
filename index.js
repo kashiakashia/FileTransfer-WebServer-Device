@@ -1,13 +1,19 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fs from "fs";
-import path from "path";
+import path, { dirname } from "path";
 import { SerialPort } from "serialport";
 import fetch from "node-fetch";
 import { error } from "console";
+import { fileURLToPath } from "url";
 
 const app = express();
 const port_host = 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+//allow static files
+app.use(express.static(path.join(__dirname, "public")));
 
 // Path to the file to be sent
 const filePath = "./data/posts.json";
