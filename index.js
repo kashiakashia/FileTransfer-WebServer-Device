@@ -3,17 +3,18 @@ import bodyParser from "body-parser";
 import fs from "fs";
 import path, { dirname } from "path";
 import { SerialPort } from "serialport";
-import fetch from "node-fetch";
-import { error } from "console";
+import { ReadlineParser } from "@serialport/parser-readline";
 import { fileURLToPath } from "url";
 
 const app = express();
 const port_host = 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const filePath = "./data/posts.json"; // Path to the file to be sent
 
-app.use(express.static(path.join(__dirname, "public"))); //allow static files
+const filePath = "./data/posts.json"; // Path to the file to be sent
+let confirmationStatus = "Waiting for confirmation...";
+
+app.use(express.static(path.join(__dirname, "public"))); // Allow static files
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -21,7 +22,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 let jsonData = {};
+let serialPort;
+let parser;
 
+// Read initial JSON data
 fs.readFile(filePath, (err, data) => {
   if (err) {
     console.error("Error reading file:", err);
@@ -34,53 +38,65 @@ fs.readFile(filePath, (err, data) => {
   }
 });
 
+// ------------------ global functions -------------------
+
+// serial port init
+const setupSerialPort = (com, baudrate) => {
+  serialPort = new SerialPort({ path: com, baudRate: baudrate });
+  parser = serialPort.pipe(new ReadlineParser({ delimiter: "\r\n" }));
+
+  serialPort.on("error", (err) => {
+    console.error("Error opening serial port:", err.message);
+  });
+
+  serialPort.on("open", () => {
+    console.log("Serial port opened.");
+  });
+
+  // Handle data received from the ESP32
+  parser.on("data", (data) => {
+    console.log("Received:", data);
+    // Update confirmation status based on received data
+    confirmationStatus = data;
+  });
+};
+
+// Route to render the index page with JSON data
 app.get("/", (req, res) => {
-  res.render("index", { jsonData: jsonData });
+  res.render("index", {
+    jsonData: jsonData,
+    confirmationStatus: confirmationStatus,
+  });
 });
 
+// Route to handle sending data via COM port
 app.post("/sendViaCOM", (req, res) => {
   try {
     const com = req.body["com-port"];
     const baudrateString = req.body["baudrate"];
     const baudrateNumber = parseInt(baudrateString, 10); // 10 specifies the radix (base) of the number
 
-    const port = new SerialPort({
-      path: com,
-      baudRate: baudrateNumber, // Specify the baud rate
-    });
-    console.log(com, baudrateNumber);
+    if (!serialPort || !serialPort.isOpen) {
+      setupSerialPort(com, baudrateNumber);
+    }
 
-    port.on("error", (err) => {
-      console.error("Error opening serial port:", err.message);
-      res.setHeader("Content-Type", "application/json");
-      res.json({ error: err.message });
-    });
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        console.error("Error reading file:", err.message);
+        return res
+          .status(500)
+          .json({ error: "Error reading file: " + err.message });
+      }
 
-    port.on("open", () => {
-      console.log("Serial port opened.");
-
-      // Read the file
-      fs.readFile(filePath, (err, data) => {
+      serialPort.write(data, (err) => {
         if (err) {
-          // Handle file reading error
-          console.error("Error reading file:", err.message);
-          res.status(500).json({ error: "Error reading file: " + err.message });
-          return;
+          console.error("Error writing to port:", err.message);
+          return res.status(500).json({
+            error: "Error sending the file via serial port: " + err.message,
+          });
         }
-
-        // Send the file contents over the serial port
-        port.write(data, (err) => {
-          if (err) {
-            // Handle port write error
-            console.error("Error writing to port:", err.message);
-            res.status(500).json({
-              error: "Error sending the file via serial port: " + err.message,
-            });
-            return;
-          }
-          console.log("File sent successfully.");
-          res.json({ success: "File sent successfully." });
-        });
+        console.log("File sent successfully.");
+        res.json({ success: "File sent successfully." });
       });
     });
   } catch (error) {
@@ -91,9 +107,8 @@ app.post("/sendViaCOM", (req, res) => {
 
 app.post("/submit", (req, res) => {
   const data = req.body["data"];
-  const currentDate = new Date().toISOString(); // Generate current date in ISO format
+  const currentDate = new Date().toISOString();
 
-  // Check if the title already exists in jsonData
   if (jsonData.hasOwnProperty(data)) {
     res.send(
       "<script>alert('The post with title \"" +
@@ -103,10 +118,8 @@ app.post("/submit", (req, res) => {
     return;
   }
 
-  // Update jsonData object
   jsonData[currentDate] = data;
 
-  // Write jsonData to the file
   fs.writeFile(filePath, JSON.stringify(jsonData, null, 2), (err) => {
     if (err) {
       console.error("Error writing file:", err);
@@ -120,7 +133,6 @@ app.post("/submit", (req, res) => {
 
 app.post("/saveControlPanelData", (req, res) => {
   const controlPanelData = req.body;
-
   const currentDate = new Date().toISOString();
   jsonData[currentDate] = controlPanelData;
 
@@ -136,18 +148,15 @@ app.post("/saveControlPanelData", (req, res) => {
   });
 });
 
-// Route for handling the save operation
 app.get("/save", (req, res) => {
   const destFilePath = "E:/posts.json"; // Replace with the actual path to your pendrive
 
-  // Read the file from the 'data' directory
   fs.readFile(filePath, (err, data) => {
     if (err) {
       console.error("Error reading file:", err);
       return res.status(500).send("Error reading file.");
     }
 
-    // Write the file to the pendrive
     fs.writeFile(destFilePath, data, (err) => {
       if (err) {
         console.error("Error writing file:", err);
