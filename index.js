@@ -96,7 +96,10 @@ app.post("/sendViaCOM", (req, res) => {
           });
         }
         console.log("File sent successfully.");
-        res.json({ success: "File sent successfully." });
+        res.json({
+          success: "File sent successfully.",
+          confirmationStatus: confirmationStatus,
+        });
       });
     });
   } catch (error) {
