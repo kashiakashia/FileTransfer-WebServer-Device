@@ -69,6 +69,10 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/getConfirmationStatus", (req, res) => {
+  res.json({ confirmationStatus });
+});
+
 // Route to handle sending data via COM port
 app.post("/sendViaCOM", (req, res) => {
   try {
@@ -96,10 +100,7 @@ app.post("/sendViaCOM", (req, res) => {
           });
         }
         console.log("File sent successfully.");
-        res.json({
-          success: "File sent successfully.",
-          confirmationStatus: confirmationStatus,
-        });
+        res.json({ success: "File sent successfully." });
       });
     });
   } catch (error) {

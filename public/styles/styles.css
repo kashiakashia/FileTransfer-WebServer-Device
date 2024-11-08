@@ -39,6 +39,11 @@ select {
   padding: 5px;
 }
 
+p {
+  font-size: 12px;
+  color: red;
+}
+
 .button {
   color: #2e2d2d;
   padding: 8px;

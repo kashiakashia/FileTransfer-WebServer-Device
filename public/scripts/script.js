@@ -1,13 +1,21 @@
 document.addEventListener("DOMContentLoaded", (event) => {
+  console.log("Script loaded");
+
   const circle = document.querySelector(".circle");
   const point = document.getElementById("draggable-point");
   const percentageDisplay = document.getElementById("percentage");
-  let radius = circle.clientWidth / 2;
-  let pointRadius = point.clientWidth / 2;
-  let circleCenter = {
-    x: circle.getBoundingClientRect().left + radius,
-    y: circle.getBoundingClientRect().top + radius,
-  };
+  let radius = circle ? circle.clientWidth / 2 : 0;
+  let pointRadius = point ? point.clientWidth / 2 : 0;
+  let circleCenter = circle
+    ? {
+        x: circle.getBoundingClientRect().left + radius,
+        y: circle.getBoundingClientRect().top + radius,
+      }
+    : { x: 0, y: 0 };
+
+  console.log("Circle:", circle);
+  console.log("Point:", point);
+  console.log("Percentage Display:", percentageDisplay);
 
   let isDragging = false;
   let lastMouseMoveTime = 0;
@@ -22,12 +30,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
     };
   }
 
-  point.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    updateDimensions();
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  });
+  if (point) {
+    point.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      updateDimensions();
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+  }
 
   function onMouseMove(e) {
     const currentTime = Date.now();
@@ -81,6 +91,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
           // Update the HTML to display the response
           const responseDiv = document.getElementById("response");
           responseDiv.innerHTML = JSON.stringify(data, null, 2); // Beautify JSON
+          console.log("Response data:", data);
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -89,6 +100,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         });
     });
 
+  // Save button click event handler
   document.getElementById("saveBtn").addEventListener("click", () => {
     fetch("/save")
       .then((response) => {
@@ -107,6 +119,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
       });
   });
 
+  // Event listener for cell clicks
   document.querySelectorAll(".cell").forEach((cell) => {
     cell.addEventListener("click", () => {
       const color = cell.getAttribute("data-color");
@@ -135,6 +148,41 @@ document.addEventListener("DOMContentLoaded", (event) => {
       }
     });
   });
+
+  // Function to fetch the latest confirmation status
+  let confirmationTimeout;
+  const fetchConfirmationStatus = () => {
+    fetch("/getConfirmationStatus")
+      .then((response) => response.json())
+      .then((data) => {
+        const confirmationStatusElement =
+          document.getElementById("confirmationStatus");
+        console.log(
+          "Fetched confirmation status element:",
+          confirmationStatusElement
+        );
+        if (confirmationStatusElement) {
+          confirmationStatusElement.textContent = data.confirmationStatus;
+          console.log("Confirmation status updated:", data.confirmationStatus);
+
+          // Clear the previous timeout and set a new one
+          clearTimeout(confirmationTimeout);
+          confirmationTimeout = setTimeout(() => {
+            confirmationStatusElement.textContent =
+              "Waiting for confirmation...";
+            console.log(
+              "No new confirmation received, status reset to waiting."
+            );
+          }, 10000); // Reset status after 10 seconds of no new confirmation
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching confirmation status:", error);
+      });
+  };
+
+  // Fetch the confirmation status every 2 seconds
+  setInterval(fetchConfirmationStatus, 2000);
 
   document
     .getElementById("saveControlPanelBtn")
